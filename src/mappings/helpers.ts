@@ -19,16 +19,18 @@ import { BTokenBytes } from '../types/templates/Pool/BTokenBytes'
 import { BToken } from '../types/templates/Pool/BToken'
 import { CRPFactory } from '../types/Factory/CRPFactory'
 import { ConfigurableRightsPool } from '../types/Factory/ConfigurableRightsPool'
+import { upsertTokenPrice, upsertTokens } from './token/token'
 
 export let ZERO_BD = BigDecimal.fromString('0')
+export let ZERO_BI = BigInt.fromString('0')
 
 let network = dataSource.network()
 
 // Config for mainnet
-let WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-let USD = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
-let DAI = '0x6b175474e89094c44da98b954eedeac495271d0f'
-let CRP_FACTORY = '0xed52D8E202401645eDAD1c0AA21e872498ce47D0'
+export let WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
+export let USD = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+export let DAI = '0x6b175474e89094c44da98b954eedeac495271d0f'
+export let CRP_FACTORY = '0xed52D8E202401645eDAD1c0AA21e872498ce47D0'
 
 if (network == 'kovan') {
   WETH = '0xd0a1e359811322d97991e03f863a0c30c2cf029c'
@@ -176,42 +178,11 @@ export function updatePoolLiquidity(id: string): void {
     }
   }
 
+  // Create token entry
   // Create or update token price
-
   if (hasPrice) {
-    for (let i: i32 = 0; i < tokensList.length; i++) {
-      let tokenPriceId = tokensList[i].toHexString()
-      let tokenPrice = TokenPrice.load(tokenPriceId)
-      if (tokenPrice == null) {
-        tokenPrice = new TokenPrice(tokenPriceId)
-        tokenPrice.poolTokenId = ''
-        tokenPrice.poolLiquidity = ZERO_BD
-      }
-
-      let poolTokenId = id.concat('-').concat(tokenPriceId)
-      let poolToken = PoolToken.load(poolTokenId)
-
-      if (
-        (tokenPrice.poolTokenId == poolTokenId || poolLiquidity.gt(tokenPrice.poolLiquidity)) &&
-        (
-          (tokenPriceId != WETH.toString() && tokenPriceId != DAI.toString()) ||
-          (pool.tokensCount.equals(BigInt.fromI32(2)) && hasUsdPrice)
-        )
-      ) {
-        tokenPrice.price = ZERO_BD
-
-        if (poolToken.balance.gt(ZERO_BD)) {
-          tokenPrice.price = poolLiquidity.div(pool.totalWeight).times(poolToken.denormWeight).div(poolToken.balance)
-        }
-
-        tokenPrice.symbol = poolToken.symbol
-        tokenPrice.name = poolToken.name
-        tokenPrice.decimals = poolToken.decimals
-        tokenPrice.poolLiquidity = poolLiquidity
-        tokenPrice.poolTokenId = poolTokenId
-        tokenPrice.save()
-      }
-    }
+    upsertTokens(tokensList);
+    upsertTokenPrice(pool, { hasUsdPrice, poolLiquidity });
   }
 
   // Update pool liquidity

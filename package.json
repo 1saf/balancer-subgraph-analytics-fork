@@ -2,13 +2,13 @@
   "name": "balancer",
   "version": "0.1.0",
   "scripts": {
-    "create": "graph create balancer-labs/balancer-subgraph --node https://api.thegraph.com/deploy/",
+    "create": "graph create 1saf/balancer-subgraph-analytics-fork --node https://api.thegraph.com/deploy/ --access-token 6427637204cf429db3f0d042a7500a0c",
     "create:local": "graph create balancer-labs/balancer-subgraph --node http://127.0.0.1:8020",
     "codegen": "graph codegen --output-dir src/types/",
     "build": "graph build",
-    "deploy": "graph deploy balancer-labs/balancer --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "deploy": "graph deploy 1saf/balancer-subgraph-analytics-fork --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --access-token 6427637204cf429db3f0d042a7500a0c",
     "deploy:beta": "graph deploy balancer-labs/balancer-beta --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "deploy:kovan": "graph deploy balancer-labs/balancer-kovan subgraph.kovan.yaml --debug --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "deploy:kovan": "graph deploy balancer-labs/balancer-kovan subgraph.kovan.yaml --debug --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ 6427637204cf429db3f0d042a7500a0c",
     "deploy:rinkeby": "graph deploy balancer-labs/balancer-rinkeby subgraph.rinkeby.yaml --debug --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "deploy:ropsten": "graph deploy balancer-labs/balancer-ropsten subgraph.ropsten.yaml --debug --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "deploy:local": "graph deploy balancer-labs/balancer-subgraph subgraph.yaml --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020"

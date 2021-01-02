@@ -43,6 +43,7 @@ templates:
         - Pool
         - Balancer
         - Swap
+        - Token
       abis:
         - name: Pool
           file: ./abis/BPool.json

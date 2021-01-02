@@ -109,6 +109,7 @@ type TokenPrice @entity {
     price: BigDecimal!
     poolLiquidity: BigDecimal!
     poolTokenId: String
+    token: Token!
 }
 
 enum SwapType {
@@ -118,4 +119,71 @@ enum SwapType {
     joinswapPoolAmountOut,
     exitswapPoolAmountIn,
     exitswapExternAmountOut
+}
+
+type DailyTokenSwapStatistics @entity {
+    # day timestamp
+    id: ID!
+
+    # exact timestamp
+    date: Int!
+
+    # token id (contract address)
+    token: Token!
+
+    volume: BigDecimal!
+    
+    swapTxCount: BigInt!
+
+    liquidity: BigDecimal!
+
+    liquidityUSD: BigDecimal!
+}
+
+type HourlyTokenSwapStatistics @entity {
+    # day timestamp
+    id: ID!
+
+    # exact timestamp
+    date: Int!
+
+    # token id (contract address)
+    token: Token!
+
+    volume: BigDecimal!
+    
+    volumeUSD: BigDecimal!
+
+    swapCount: BigInt!
+
+    liquidity: BigDecimal!
+
+    liquidityUSD: BigDecimal!
+}
+
+type Token @entity {
+    # the token contract address
+    id: ID!
+
+    # the balancer factory 
+    balancer: Balancer!
+
+    symbol: String!
+
+    name: String!
+
+    decimals: BigInt!
+
+    # the total number of swaps this token has undergone on the balancer exchange
+    swapTxCount: BigInt!
+
+    txCount: BigInt!
+
+    totalLiquidity: BigDecimal!
+
+    hourlySwapStatistics: [HourlyTokenSwapStatistics!]! @derivedFrom(field: "token")
+
+    dailySwapStatistics: [DailyTokenSwapStatistics!]! @derivedFrom(field: "token")
+
+    tokenPrice: TokenPrice!
 }

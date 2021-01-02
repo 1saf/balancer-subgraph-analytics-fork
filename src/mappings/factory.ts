@@ -13,6 +13,23 @@ import {
 } from './helpers'
 import { ConfigurableRightsPool } from '../types/Factory/ConfigurableRightsPool';
 
+export function getBalancerFactory(): Balancer {
+  let balancer = Balancer.load('1');
+  if (balancer == null) {
+    balancer = new Balancer('1')
+    balancer.color = 'Bronze'
+    balancer.poolCount = 0
+    balancer.finalizedPoolCount = 0
+    balancer.crpCount = 0
+    balancer.txCount = BigInt.fromI32(0)
+    balancer.totalLiquidity = ZERO_BD
+    balancer.totalSwapVolume = ZERO_BD
+    balancer.totalSwapFee = ZERO_BD
+    balancer.save();
+  }
+  return balancer;
+}
+
 export function handleNewPool(event: LOG_NEW_POOL): void {
   let factory = Balancer.load('1')
 
