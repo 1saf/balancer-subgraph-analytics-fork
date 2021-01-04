@@ -193,6 +193,17 @@ export function handleJoinPool(event: LOG_JOIN): void {
   poolToken.balance = newAmount
   poolToken.save()
 
+  const tokenInEntity = Token.load(address);
+  const tokenInPrice = TokenPrice.load(address);
+
+  updateTokenDailyStatistics(event, {
+    token: tokenInEntity,
+    increaseTxCountBy: 1,
+
+    increaseLiquidityInUnitsBy: tokenAmountIn,
+    increaseLiquidityInUsdBy: tokenAmountIn.times(tokenInPrice.price),
+  });
+
   updatePoolLiquidity(poolId)
   saveTransaction(event, 'join')
 }
@@ -215,6 +226,17 @@ export function handleExitPool(event: LOG_EXIT): void {
     pool.active = false
   }
   pool.save()
+
+  const tokenOutEntity = Token.load(address);
+  const tokenOutPrice = TokenPrice.load(address);
+
+  updateTokenDailyStatistics(event, {
+    token: tokenOutEntity,
+    increaseTxCountBy: 1,
+
+    increaseLiquidityInUnitsBy: BigDecimal.fromString(`-${tokenAmountOut.toString()}`),
+    increaseLiquidityInUsdBy: BigDecimal.fromString(`-${tokenAmountOut.times(tokenOutPrice.price).toString()}`),
+  });
 
   updatePoolLiquidity(poolId)
   saveTransaction(event, 'exit')

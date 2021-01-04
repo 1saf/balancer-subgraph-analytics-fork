@@ -41,7 +41,7 @@ type UpdateDailyTokenStatisticsRequest = {
     increaseTxCountBy?: number;
 };
 
-export function updateTokenDailyStatistics(event: LOG_SWAP, {
+export function updateTokenDailyStatistics(event: ethereum.Event, {
     token,
     increaseSwapTxCountBy,
     increaseSwapVolumeInUnitsBy,
