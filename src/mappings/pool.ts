@@ -1,4 +1,4 @@
-import { BigInt, Address, Bytes, store } from '@graphprotocol/graph-ts'
+import { BigInt, Address, Bytes, store, BigDecimal } from '@graphprotocol/graph-ts'
 import { LOG_CALL, LOG_JOIN, LOG_EXIT, LOG_SWAP, Transfer, GulpCall } from '../types/templates/Pool/Pool'
 import { Pool as BPool } from '../types/templates/Pool/Pool'
 import {
@@ -7,7 +7,8 @@ import {
   PoolToken,
   PoolShare,
   Swap,
-  TokenPrice
+  TokenPrice,
+  Token
 } from '../types/schema'
 import {
   hexToDecimal,
@@ -20,6 +21,7 @@ import {
   ZERO_BD,
   decrPoolCount
 } from './helpers'
+import { updateTokenDailyStatistics } from './token/token'
 
 /************************************
  ********** Pool Controls ***********
@@ -241,6 +243,7 @@ export function handleSwap(event: LOG_SWAP): void {
   poolTokenOut.balance = newAmountOut
   poolTokenOut.save()
 
+  // also upserts token and token price
   updatePoolLiquidity(poolId)
 
   let swapId = event.transaction.hash.toHexString().concat('-').concat(event.logIndex.toString())
@@ -253,6 +256,7 @@ export function handleSwap(event: LOG_SWAP): void {
   let tokensList: Array<Bytes> = pool.tokensList
   let tokenOutPriceValue = ZERO_BD
   let tokenOutPrice = TokenPrice.load(tokenOut)
+
 
   if (tokenOutPrice != null) {
     tokenOutPriceValue = tokenOutPrice.price
@@ -317,6 +321,34 @@ export function handleSwap(event: LOG_SWAP): void {
   swap.feeValue = swapFeeValue
   swap.timestamp = event.block.timestamp.toI32()
   swap.save()
+
+  const tokenInEntity = Token.load(tokenIn);
+  const tokenOutEntity = Token.load(tokenOut);
+  const tokenInPrice = TokenPrice.load(tokenIn);
+
+  updateTokenDailyStatistics(event, {
+    token: tokenInEntity,
+    increaseSwapTxCountBy: 1,
+    increaseTxCountBy: 1,
+
+    increaseLiquidityInUnitsBy: tokenAmountIn,
+    increaseLiquidityInUsdBy: tokenAmountIn.times(tokenInPrice.price),
+
+    increaseSwapVolumeInUnitsBy: tokenAmountIn,
+    increaseSwapVolumeInUsdBy: tokenAmountIn.times(tokenInPrice.price),
+  });
+
+  updateTokenDailyStatistics(event, {
+    token: tokenOutEntity,
+    increaseSwapTxCountBy: 1,
+    increaseTxCountBy: 1,
+
+    increaseLiquidityInUsdBy: BigDecimal.fromString(`-${tokenAmountOut.times(tokenOutPrice.price).toString()}`),
+    increaseLiquidityInUnitsBy: BigDecimal.fromString(`-${tokenAmountOut.toString()}`),
+
+    increaseSwapVolumeInUnitsBy: BigDecimal.fromString(`-${tokenAmountOut.toString()}`),
+    increaseSwapVolumeInUsdBy: BigDecimal.fromString(`-${tokenAmountOut.times(tokenOutPrice.price).toString()}`),
+  });
 
   saveTransaction(event, 'swap')
 }

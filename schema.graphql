@@ -121,7 +121,7 @@ enum SwapType {
     exitswapExternAmountOut
 }
 
-type DailyTokenSwapStatistics @entity {
+type DailyTokenStatistics @entity {
     # day timestamp
     id: ID!
 
@@ -131,16 +131,21 @@ type DailyTokenSwapStatistics @entity {
     # token id (contract address)
     token: Token!
 
-    volume: BigDecimal!
+    # swap volume in token units
+    swapVolumeInUnits: BigDecimal!
+
+    swapVolumeInUsd: BigDecimal!
     
     swapTxCount: BigInt!
 
-    liquidity: BigDecimal!
+    txCount: BigInt!
 
-    liquidityUSD: BigDecimal!
+    liquidityInUnits: BigDecimal!
+
+    liquidityInUsd: BigDecimal!
 }
 
-type HourlyTokenSwapStatistics @entity {
+type HourlyTokenStatistics @entity {
     # day timestamp
     id: ID!
 
@@ -181,9 +186,9 @@ type Token @entity {
 
     totalLiquidity: BigDecimal!
 
-    hourlySwapStatistics: [HourlyTokenSwapStatistics!]! @derivedFrom(field: "token")
+    hourlyStatistics: [HourlyTokenStatistics!]! @derivedFrom(field: "token")
 
-    dailySwapStatistics: [DailyTokenSwapStatistics!]! @derivedFrom(field: "token")
+    dailyStatistics: [DailyTokenStatistics!]! @derivedFrom(field: "token")
 
     tokenPrice: TokenPrice!
 }

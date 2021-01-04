@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts';
-import { DailyTokenSwapStatistics, Pool, PoolToken, Token, TokenPrice } from '../../types/schema';
+import { DailyTokenStatistics, Pool, PoolToken, Token, TokenPrice } from '../../types/schema';
 import { BToken } from '../../types/templates/Pool/BToken';
 import { BTokenBytes } from '../../types/templates/Pool/BTokenBytes';
 import { LOG_SWAP } from '../../types/templates/Pool/Pool';
@@ -31,18 +31,67 @@ export function getToken(tokenAddress: Address): Token | null {
     return token;
 }
 
-type UpdateDailyTokenSwapStatisticsRequest = {};
+type UpdateDailyTokenStatisticsRequest = {
+    token: Token;
+    increaseSwapVolumeInUsdBy?: BigDecimal;
+    increaseSwapTxCountBy?: number;
+    increaseSwapVolumeInUnitsBy?: BigDecimal;
+    increaseLiquidityInUnitsBy?: BigDecimal;
+    increaseLiquidityInUsdBy?: BigDecimal;
+    increaseTxCountBy?: number;
+};
 
-export function updateTokenDailySwapStatistics(event: LOG_SWAP, update: UpdateDailyTokenSwapStatisticsRequest): void {
+export function updateTokenDailyStatistics(event: LOG_SWAP, {
+    token,
+    increaseSwapTxCountBy,
+    increaseSwapVolumeInUnitsBy,
+    increaseSwapVolumeInUsdBy,
+    increaseLiquidityInUnitsBy,
+    increaseLiquidityInUsdBy,
+    increaseTxCountBy,
+}: UpdateDailyTokenStatisticsRequest): DailyTokenStatistics {
     const timestamp = event.block.timestamp.toI32();
     const dayId = timestamp / 86400;
+    const yesterdayDayId = dayId - 1;
 
-    let currentDayStatistics = DailyTokenSwapStatistics.load(dayId.toString());
+    let currentDayStatistics = DailyTokenStatistics.load(dayId.toString());
 
     // first event of the day, let's create a new day statistics
     // entity
     if (currentDayStatistics === null) {
+        const yesterdayDayStatistics = DailyTokenStatistics.load(yesterdayDayId.toString());
+
+        currentDayStatistics = new DailyTokenStatistics(dayId.toString());
+
+        currentDayStatistics.date = timestamp;
+        currentDayStatistics.token = token.id;
+        currentDayStatistics.swapVolumeInUsd = ZERO_BD;
+        currentDayStatistics.swapTxCount = ZERO_BI;
+        currentDayStatistics.swapVolumeInUnits = ZERO_BD;
+
+        if (yesterdayDayStatistics && yesterdayDayStatistics.liquidityInUnits != null) {
+            currentDayStatistics.liquidityInUnits = yesterdayDayStatistics.liquidityInUnits;
+        } else {
+            currentDayStatistics.liquidityInUnits = ZERO_BD;
+        }
+        if (yesterdayDayStatistics && yesterdayDayStatistics.liquidityInUsd != null) {
+            currentDayStatistics.liquidityInUsd = yesterdayDayStatistics.liquidityInUsd;
+        } else {
+            currentDayStatistics.liquidityInUsd = ZERO_BD;
+        }
+        currentDayStatistics.txCount = ZERO_BI;
+        currentDayStatistics.save();
     }
+
+    if (increaseSwapTxCountBy) currentDayStatistics.swapTxCount.plus(BigInt.fromI32(increaseSwapTxCountBy));
+    if (increaseSwapVolumeInUnitsBy) currentDayStatistics.swapVolumeInUnits.plus(increaseSwapVolumeInUnitsBy);
+    if (increaseSwapVolumeInUsdBy) currentDayStatistics.swapVolumeInUsd.plus(increaseSwapVolumeInUsdBy);
+    if (increaseLiquidityInUnitsBy) currentDayStatistics.liquidityInUnits.plus(increaseLiquidityInUnitsBy);
+    if (increaseLiquidityInUsdBy) currentDayStatistics.liquidityInUsd.plus(increaseLiquidityInUsdBy);
+    if (increaseTxCountBy) currentDayStatistics.txCount.plus(BigInt.fromI32(increaseTxCountBy));
+
+    currentDayStatistics.save();
+    return currentDayStatistics;
 }
 
 type ERC20TokenInfo = {
@@ -98,7 +147,6 @@ export function getERC20TokenInfo(tokenHexAddress: string = ''): ERC20TokenInfo 
     };
 }
 
-
 type UpsertTokenPriceRequest = {
     poolLiquidity: BigDecimal,
     hasUsdPrice: boolean;
@@ -123,7 +171,7 @@ export function upsertTokens(tokenAddressList: Bytes[]): void {
             newTokenEntity.swapTxCount = ZERO_BI;
             newTokenEntity.txCount = ZERO_BI;
             newTokenEntity.totalLiquidity = ZERO_BD;
-            
+
             newTokenEntity.save();
         }
     }
@@ -134,6 +182,9 @@ export function upsertTokenPrice(pool: Pool, { hasUsdPrice, poolLiquidity }: Ups
     for (let i: i32 = 0; i < tokensList.length; i++) {
         let tokenPriceId = tokensList[i].toHexString();
         let tokenPrice = TokenPrice.load(tokenPriceId);
+
+        // no token price exists for one of the tokens 
+        // in this pool
         if (tokenPrice === null) {
             tokenPrice = new TokenPrice(tokenPriceId);
             tokenPrice.poolTokenId = '';

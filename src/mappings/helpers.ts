@@ -142,6 +142,10 @@ export function createPoolTokenEntity(id: string, pool: string, address: string)
   poolToken.save()
 }
 
+export function calculatePoolLiquidity() {
+
+}
+
 export function updatePoolLiquidity(id: string): void {
   let pool = Pool.load(id)
   let tokensList: Array<Bytes> = pool.tokensList
@@ -149,7 +153,6 @@ export function updatePoolLiquidity(id: string): void {
   if (!tokensList || pool.tokensCount.lt(BigInt.fromI32(2)) || !pool.publicSwap) return
 
   // Find pool liquidity
-
   let hasPrice = false
   let hasUsdPrice = false
   let poolLiquidity = ZERO_BD
@@ -186,7 +189,6 @@ export function updatePoolLiquidity(id: string): void {
   }
 
   // Update pool liquidity
-
   let liquidity = ZERO_BD
   let denormWeight = ZERO_BD
 
