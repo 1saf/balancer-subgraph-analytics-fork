@@ -193,8 +193,8 @@ export function handleJoinPool(event: LOG_JOIN): void {
   poolToken.balance = newAmount
   poolToken.save()
 
-  const tokenInEntity = Token.load(address);
-  const tokenInPrice = TokenPrice.load(address);
+  let tokenInEntity = Token.load(address);
+  let tokenInPrice = TokenPrice.load(address);
 
   updateTokenDailyStatistics(event, {
     token: tokenInEntity,
@@ -227,8 +227,8 @@ export function handleExitPool(event: LOG_EXIT): void {
   }
   pool.save()
 
-  const tokenOutEntity = Token.load(address);
-  const tokenOutPrice = TokenPrice.load(address);
+  let tokenOutEntity = Token.load(address);
+  let tokenOutPrice = TokenPrice.load(address);
 
   updateTokenDailyStatistics(event, {
     token: tokenOutEntity,
@@ -344,9 +344,9 @@ export function handleSwap(event: LOG_SWAP): void {
   swap.timestamp = event.block.timestamp.toI32()
   swap.save()
 
-  const tokenInEntity = Token.load(tokenIn);
-  const tokenOutEntity = Token.load(tokenOut);
-  const tokenInPrice = TokenPrice.load(tokenIn);
+  let tokenInEntity = Token.load(tokenIn);
+  let tokenOutEntity = Token.load(tokenOut);
+  let tokenInPrice = TokenPrice.load(tokenIn);
 
   updateTokenDailyStatistics(event, {
     token: tokenInEntity,

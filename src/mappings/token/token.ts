@@ -7,14 +7,14 @@ import { getBalancerFactory } from '../factory';
 import { ZERO_BD, ZERO_BI, WETH, DAI } from '../helpers';
 
 export function getToken(tokenAddress: Address): Token | null {
-    const tokenHexAddress = tokenAddress.toHex();
+    let tokenHexAddress = tokenAddress.toHex();
     let token = Token.load(tokenHexAddress);
-    const { name, symbol, decimals, totalSupply } = getERC20TokenInfo(tokenHexAddress);
+    let { name, symbol, decimals, totalSupply } = getERC20TokenInfo(tokenHexAddress);
 
     // no token was found
     // setup a new one
     if (token === null) {
-        const balancer = getBalancerFactory();
+        let balancer = getBalancerFactory();
         token = new Token(tokenHexAddress);
         token.balancer = balancer.id;
         token.symbol = symbol;
@@ -50,16 +50,16 @@ export function updateTokenDailyStatistics(event: ethereum.Event, {
     increaseLiquidityInUsdBy,
     increaseTxCountBy,
 }: UpdateDailyTokenStatisticsRequest): DailyTokenStatistics {
-    const timestamp = event.block.timestamp.toI32();
-    const dayId = timestamp / 86400;
-    const yesterdayDayId = dayId - 1;
+    let timestamp = event.block.timestamp.toI32();
+    let dayId = timestamp / 86400;
+    let yesterdayDayId = dayId - 1;
 
     let currentDayStatistics = DailyTokenStatistics.load(dayId.toString());
 
     // first event of the day, let's create a new day statistics
     // entity
     if (currentDayStatistics === null) {
-        const yesterdayDayStatistics = DailyTokenStatistics.load(yesterdayDayId.toString());
+        let yesterdayDayStatistics = DailyTokenStatistics.load(yesterdayDayId.toString());
 
         currentDayStatistics = new DailyTokenStatistics(dayId.toString());
 
@@ -156,15 +156,15 @@ export function upsertTokens(tokenAddressList: Bytes[]): void {
     if (!tokenAddressList || !tokenAddressList.length) return;
 
     for (let i: i32 = 0; i < tokenAddressList.length; i++) {
-        const tokenAddress = tokenAddressList[i];
+        let tokenAddress = tokenAddressList[i];
         if (!tokenAddress) continue;
 
-        const existingTokenEntity = Token.load(tokenAddress.toHexString());
+        let existingTokenEntity = Token.load(tokenAddress.toHexString());
         if (existingTokenEntity == null) {
-            const newTokenEntity = new Token(tokenAddress.toHexString());
+            let newTokenEntity = new Token(tokenAddress.toHexString());
 
             newTokenEntity.balancer = getBalancerFactory().id;
-            const { decimals, name, symbol } = getERC20TokenInfo(tokenAddress.toHexString());
+            let { decimals, name, symbol } = getERC20TokenInfo(tokenAddress.toHexString());
             newTokenEntity.decimals = decimals;
             newTokenEntity.name = name;
             newTokenEntity.symbol = symbol;
@@ -178,7 +178,7 @@ export function upsertTokens(tokenAddressList: Bytes[]): void {
 }
 
 export function upsertTokenPrice(pool: Pool, { hasUsdPrice, poolLiquidity }: UpsertTokenPriceRequest): void {
-    const tokensList = pool.tokensList;
+    let tokensList = pool.tokensList;
     for (let i: i32 = 0; i < tokensList.length; i++) {
         let tokenPriceId = tokensList[i].toHexString();
         let tokenPrice = TokenPrice.load(tokenPriceId);
